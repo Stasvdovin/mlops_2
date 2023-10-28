@@ -4,9 +4,6 @@ import os
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
-params = yaml.safe_load(open("params.yaml"))["split"]
-p_split_ratio = params["split_ratio"]
-p_seed = params["seed"]
 
 
 if len(sys.argv) != 2:
@@ -24,7 +21,7 @@ df = pd.read_csv(f_input)
 X = df.drop(columns = ["Price(euro)"])
 y = df["Price(euro)"]
 features_names = df.drop(columns = ["Price(euro)"]).columns
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=p_split_ratio, random_state=p_speed)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
 
 pd.concat([X_train, y_train], axis=1).to_csv("data/stage4/train.csv", index=None)
 pd.concat([X_test, y_test], axis=1).to_csv("data/stage4/test.csv", index=None)

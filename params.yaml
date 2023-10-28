@@ -1,6 +1,5 @@
 split:
-  split_ratio: 0.3
   speed: 42
 train:
   random_seed: 42
-  iterations: 100
+  iterations: 400
