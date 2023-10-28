@@ -1,6 +1,8 @@
 import sys
 import os
 import io
+import pandas as pd
+
 
 if len(sys.argv) != 2:
     sys.stderr.write("Arguments error. Usage:\n")
@@ -8,24 +10,19 @@ if len(sys.argv) != 2:
     sys.exit(1)
 
 f_input = sys.argv[1]
-f_output = os.path.join("data", "stage1", "train.csv")
-os.makedirs(os.path.join("data", "stage1"), exist_ok=True)
+os.makedirs(os.path.join("data", "stage2"), exist_ok=True)
 
-def process_data(fd_in, fd_out):
-    fd_in.readline()
-    for line in fd_in:
-        line = line.rstrip('\n').split(',')
-        p_survived = line[1]
-        p_pclass = line[2]
-        if line[3][0] == '"':
-            p_sex = line[5]
-            p_age = line[6]
-        else:
-            p_sex = line[4]
-            p_age = line[5]
-        fd_out.write("{},{},{},{}\n".format(p_survived, p_pclass, p_sex, p_age))
+# забираем датасет для обработки
+df = pd.read_csv(f_input)
 
-with io.open(f_input, encoding="utf8") as fd_in:
-    with io.open(f_output, "w", encoding="utf8") as fd_out:
-        process_data(fd_in, fd_out)
+# добавляем новый признак
+df['Age'] = 2022 - df.Year
+df['km_year'] = df.Distance/df.Age
+question_km_year = df[df.km_year > 50e3]
+df = df.drop(question_km_year.index)
+question_km_year = df[df.km_year < 100]
+df = df.drop(question_km_year.index)
+df = df.reset_index(drop=True)
 
+
+df.to_csv("data/stage2/train.csv", index=False)

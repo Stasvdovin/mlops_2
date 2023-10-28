@@ -1,6 +1,6 @@
 import sys
 import os
-import io
+import pandas as pd
 
 if len(sys.argv) != 2:
     sys.stderr.write("Arguments error. Usage:\n")
@@ -8,36 +8,37 @@ if len(sys.argv) != 2:
     sys.exit(1)
 
 f_input = sys.argv[1]
-f_output = os.path.join("data", "stage2", "train.csv")
-os.makedirs(os.path.join("data", "stage2"), exist_ok=True)
+os.makedirs(os.path.join("data", "stage1"), exist_ok=True)
 
-def process_data(fd_in, fd_out):
-    arr_survived = []
-    arr_pclass = []
-    arr_sex = []
-    arr_age = []
+# забираем датасет для обработки
+df = pd.read_csv(f_input)
 
-    for line in fd_in:
-        line = line.rstrip('\n').split(',')
-        arr_survived.append(line[0])
-        arr_pclass.append(line[1])
-        arr_sex.append(line[2])
-        if line[3]:
-            arr_age.append(float(line[3]))
-        else:
-            arr_age.append(0)
+# Удалим дубликаты
+df = df.drop_duplicates()
+df = df.reset_index(drop=True)
 
-    s = sum(arr_age)
+# Почистим данные
+question_dist = df[(df.Year <2021) & (df.Distance < 1100)]
+df = df.drop(question_dist.index)
+question_dist = df[(df.Distance > 1e6)]
+df = df.drop(question_dist.index)
+question_engine = df[df["Engine_capacity(cm3)"] < 200]
+df = df.drop(question_engine.index)
+question_engine = df[df["Engine_capacity(cm3)"] > 5000]
+df = df.drop(question_engine.index)
+question_price = df[(df["Price(euro)"] < 101)]
+df = df.drop(question_price.index)
+question_price = df[df["Price(euro)"] > 1e5]
+df = df.drop(question_price.index)
+question_year = df[df.Year < 1971]
+df = df.drop(question_year.index)
+df = df.reset_index(drop=True)
 
-    for i in range(len(arr_age)):
-        if arr_age[i] == 0:
-            arr_age[i] = round(s / len(arr_age), 2)
+# Список имён колонок с числовыми и категориальными значениями
+num_columns = list(df.select_dtypes(include='number').columns)
+cat_columns = list(df.select_dtypes(exclude='number').columns)
 
-    for p_survived, p_pclass, p_sex, p_age in zip(arr_survived, arr_pclass, arr_sex, arr_age):
-        fd_out.write("{},{},{},{}\n".format(p_survived, p_pclass, p_sex, p_age))
+df[num_columns] = df[num_columns].fillna(0)
+df[cat_columns] = df[cat_columns].fillna("")
 
-
-with io.open(f_input, encoding="utf8") as fd_in:
-    with io.open(f_output, "w", encoding="utf8") as fd_out:
-        process_data(fd_in, fd_out)
-
+df.to_csv("data/stage1/train.csv", index=False)

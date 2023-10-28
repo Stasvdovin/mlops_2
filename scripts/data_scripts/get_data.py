@@ -1,9 +1,9 @@
 #!/usr/bin/python3
 
-from catboost.datasets import titanic
+import pandas as pd
 
-train, test = titanic()
+# скачиваем данные и сохраняем в папке raw
+
+train = pd.read_csv('https://raw.githubusercontent.com/Stasvdovin/mlops_2/main/cars_moldova.csv')
 
 train.to_csv("../../data/raw/train.csv", index=False)
-
-test.to_csv("../../data/raw/test.csv", index=False)
