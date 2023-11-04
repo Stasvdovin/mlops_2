@@ -2,4 +2,4 @@ split:
   speed: 42
 train:
   random_seed: 42
-  iterations: 500
+  iterations: 600
